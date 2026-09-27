@@ -1,6 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-// import 'home_screen.dart'; // Kendi ana ekranını buraya dahil etmeyi unutma
+import 'home_screen.dart';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../models/cpu_model.dart'; // Senin mevcut ana ekranın
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -12,93 +16,94 @@ class MainMenuScreen extends StatefulWidget {
 class _MainMenuScreenState extends State<MainMenuScreen> {
   int _selectedIndex = 0;
 
-  // Sayfalarımızı burada tanımlıyoruz
-  final List<Widget> _pages = [
-    // 1. ANA SAYFA: (Buraya kendi HomeScreen'ini koymalısın)
-    const Center(
-      child: Text(
-        "Sistem Toplama Kartları Burada",
-        style: TextStyle(color: Colors.white),
-      ),
-    ),
-
-    // 2. ARAMA SAYFASI
-    const SearchScreen(),
-
-    // 3. KARŞILAŞTIRMA
-    const Center(
-      child: Text(
-        "GPU Karşılaştırma Ekranı",
-        style: TextStyle(color: Colors.white, fontSize: 20),
-      ),
-    ),
-
-    // 4. PROFİL SAYFASI
-    const ProfileScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    // Sayfa listesi artık build içinde, böylece setState ile sekme değiştirebilir
+    final List<Widget> pages = [
+      HomeScreen(
+        onNavigateToSearch: () {
+          setState(() {
+            _selectedIndex = 1; // Ara sekmesine atla
+          });
+        },
+      ),
+      const SearchScreen(),
+      const Center(
+        child: Text(
+          "GPU Karşılaştırma Ekranı Çok Yakında",
+          style: TextStyle(color: Colors.white, fontSize: 20),
+        ),
+      ),
+      const ProfileScreen(),
+    ];
+
     return Scaffold(
       backgroundColor: const Color(0xFF050505),
-
-      // KRİTİK: extendBody true olmalı ki sayfalar cam menünün altına doğru aksın
       extendBody: true,
+      resizeToAvoidBottomInset: false,
+      body: pages[_selectedIndex],
 
-      body: _pages[_selectedIndex],
-
-      // LIQUID GLASS (BUZLU CAM) ALT MENÜ TASARIMI
-      bottomNavigationBar: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 15.0,
-            sigmaY: 15.0,
-          ), // Cam bulanıklık ayarı
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05), // Şeffaf beyaz katman
-              border: Border(
-                top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+      // TEK KATMANLI ŞEFFAF BALON MENÜ
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 15),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(40),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+              child: Container(
+                // Yükseklik kısıtlaması kaldırıldı (Taşma hatasını önler)
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.15),
+                    width: 1,
+                  ),
+                ),
+                child: Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(canvasColor: Colors.transparent),
+                  child: BottomNavigationBar(
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    type: BottomNavigationBarType.fixed,
+                    selectedItemColor: Colors.blueAccent,
+                    unselectedItemColor: Colors.white54,
+                    showSelectedLabels: false,
+                    showUnselectedLabels: false,
+                    currentIndex: _selectedIndex,
+                    onTap: (index) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    },
+                    items: const [
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.home_outlined, size: 26),
+                        activeIcon: Icon(Icons.home, size: 28),
+                        label: '',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.search_outlined, size: 26),
+                        activeIcon: Icon(Icons.search, size: 28),
+                        label: '',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.compare_arrows_outlined, size: 26),
+                        activeIcon: Icon(Icons.compare_arrows, size: 28),
+                        label: '',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.person_outline, size: 26),
+                        activeIcon: Icon(Icons.person, size: 28),
+                        label: '',
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            child: BottomNavigationBar(
-              elevation: 0,
-              backgroundColor:
-                  Colors.transparent, // Arka planı tamamen şeffaf yapıyoruz
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: Colors.blueAccent,
-              unselectedItemColor: Colors.white54,
-              showSelectedLabels: true,
-              showUnselectedLabels: false,
-              currentIndex: _selectedIndex,
-              onTap: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
-                  label: 'Ana Sayfa',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search_outlined),
-                  activeIcon: Icon(Icons.search, size: 28),
-                  label: 'Ara',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.compare_arrows_outlined),
-                  activeIcon: Icon(Icons.compare_arrows),
-                  label: 'Kıyasla',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person),
-                  label: 'Profil',
-                ),
-              ],
             ),
           ),
         ),
@@ -108,10 +113,113 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 }
 
 // ==========================================
-// ARAMA SAYFASI WIDGET'I
+// ARAMA SAYFASI WIDGET'I (Enter Algılayan Yapı)
 // ==========================================
-class SearchScreen extends StatelessWidget {
+// ==========================================
+// ARAMA SAYFASI WIDGET'I (Enter Algılayan Yapı)
+// ==========================================
+class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  List<CpuModel> _allCpus = [];
+  List<CpuModel> _filteredResults = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllDatabases(); // Ekran açıldığında "Sözde API" isteğini başlat
+  }
+
+  // Her iki dosyayı da okuyup verileri standartlaştırarak birleştirir
+  Future<void> _loadAllDatabases() async {
+    List<CpuModel> temporaryList = [];
+
+    try {
+      // 1. TechPowerUp CPU Verisi
+      final String tpuResponse = await rootBundle.loadString('assets/cpu.txt');
+      final tpuData = json.decode(tpuResponse);
+      if (tpuData['status'] == 'success') {
+        for (var item in tpuData['results']) {
+          if (item['_type'] == 'withheld') continue;
+          temporaryList.add(CpuModel.fromTpu(item));
+        }
+      }
+
+      // 2. Intel CPU Verisi
+      final String intelResponse = await rootBundle.loadString(
+        'assets/intel_cpu_database.json',
+      );
+      final Map<String, dynamic> intelData = json.decode(intelResponse);
+      intelData.forEach((key, value) {
+        temporaryList.add(CpuModel.fromIntel(value));
+      });
+
+      // 3. GPU (Ekran Kartı) Verisini Ekliyoruz
+      try {
+        final String gpuResponse = await rootBundle.loadString(
+          'assets/gpu.json',
+        );
+        final List<dynamic> gpuData = json.decode(gpuResponse);
+        for (var item in gpuData) {
+          // gpu.json formatını CpuModel içine esneterek sığdırıyoruz
+          temporaryList.add(
+            CpuModel(
+              name:
+                  item['name']?.toString() ??
+                  item['model']?.toString() ??
+                  'Bilinmiyor GPU',
+              brand:
+                  item['brand']?.toString() ??
+                  item['manufacturer']?.toString() ??
+                  'NVIDIA/AMD',
+              cores: item['memory'] != null
+                  ? "${item['memory']} Bellek"
+                  : 'Ekran Kartı',
+              clock: item['clock']?.toString() ?? '',
+              socket: item['interface']?.toString() ?? '',
+              tdp: item['tdp'] != null ? "${item['tdp']}W" : '',
+            ),
+          );
+        }
+      } catch (e) {
+        print("GPU verisi çekilemedi (Dosya yok veya formati farkli): $e");
+      }
+
+      setState(() {
+        _allCpus = temporaryList;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Veri çekme hatası: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Arama çubuğu filtreleme fonksiyonu
+  void _runFilter(String enteredKeyword) {
+    List<CpuModel> results = [];
+    if (enteredKeyword.isNotEmpty) {
+      results = _allCpus.where((cpu) {
+        final searchWord = enteredKeyword.toLowerCase();
+        return cpu.name.toLowerCase().contains(searchWord) ||
+            cpu.brand.toLowerCase().contains(searchWord);
+      }).toList();
+    }
+
+    setState(() {
+      _filteredResults = results;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +230,7 @@ class SearchScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Donanım Ara",
+              "Detaylı Arama",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -131,13 +239,25 @@ class SearchScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // ARAMA ÇUBUĞU
             TextField(
+              controller: _searchController,
               style: const TextStyle(color: Colors.white),
+              onChanged: (value) => _runFilter(value),
               decoration: InputDecoration(
-                hintText: "Örn: RTX 4070, i5-12400F...",
+                hintText: _isLoading
+                    ? "Veritabanına bağlanılıyor..."
+                    : "Örn: Ryzen 5, Pentium 4...",
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                 prefixIcon: const Icon(Icons.search, color: Colors.blueAccent),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.white54),
+                        onPressed: () {
+                          _searchController.clear();
+                          _runFilter('');
+                        },
+                      )
+                    : null,
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.05),
                 border: OutlineInputBorder(
@@ -146,20 +266,77 @@ class SearchScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 30),
-            const Text(
-              "Son Aramalar",
-              style: TextStyle(color: Colors.white54, fontSize: 16),
-            ),
-            const SizedBox(height: 10),
-            // Örnek Arama Geçmişi
-            ListTile(
-              leading: const Icon(Icons.history, color: Colors.white54),
-              title: const Text(
-                "Gigabyte H610M H V2",
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {},
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.blueAccent,
+                      ),
+                    )
+                  : _searchController.text.isEmpty
+                  ? Center(
+                      child: Text(
+                        "Donanım aramak için model veya marka girin.\nToplam ${_allCpus.length} işlemci veritabanında hazır.",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white38),
+                      ),
+                    )
+                  : _filteredResults.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "Sonuç bulunamadı.",
+                        style: TextStyle(color: Colors.white54, fontSize: 16),
+                      ),
+                    )
+                  : ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: _filteredResults.length,
+                      itemBuilder: (context, index) {
+                        final cpu = _filteredResults[index];
+                        return Card(
+                          color: Colors.white.withOpacity(0.05),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: cpu.brand == 'AMD'
+                                    ? Colors.red.withOpacity(0.2)
+                                    : Colors.blue.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                cpu.cores.contains('Bellek') ||
+                                        cpu.cores.contains('Ekran Kartı')
+                                    ? Icons
+                                          .aod // Ekran kartı ise ekran ikonu
+                                    : Icons.memory, // İşlemci ise çip ikonu
+                                color: cpu.brand == 'AMD'
+                                    ? Colors.redAccent
+                                    : Colors.blueAccent,
+                              ),
+                            ),
+                            title: Text(
+                              cpu.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              "${cpu.cores} • ${cpu.clock}\nSoket: ${cpu.socket} • TDP: ${cpu.tdp}",
+                              style: const TextStyle(color: Colors.white54),
+                            ),
+                            isThreeLine: true,
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -169,7 +346,7 @@ class SearchScreen extends StatelessWidget {
 }
 
 // ==========================================
-// PROFİL SAYFASI WIDGET'I (Dolu Tasarım)
+// PROFİL VE AYARLAR SAYFASI (Gerçekçi Modüller)
 // ==========================================
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -180,42 +357,18 @@ class ProfileScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // PROFIL KART ALANI
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.blueAccent.withOpacity(0.2),
-                child: const Icon(
-                  Icons.person,
-                  size: 40,
-                  color: Colors.blueAccent,
-                ),
-              ),
-              const SizedBox(width: 20),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Eren",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    "Bilgisayar Mühendisliği",
-                    style: TextStyle(color: Colors.blueAccent, fontSize: 14),
-                  ),
-                ],
-              ),
-            ],
+          const Text(
+            "Profil ve Ayarlar",
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 30),
 
           const Text(
-            "SİSTEMLERİM",
+            "KİŞİSEL",
             style: TextStyle(
               color: Colors.white54,
               fontSize: 12,
@@ -223,58 +376,20 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-
-          // MEVCUT SİSTEM KARTI
-          Card(
-            color: Colors.white.withOpacity(0.05),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.desktop_windows, color: Colors.white),
-              title: const Text(
-                "Masaüstü Sistem",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: const Text(
-                "i5-12400F • H610M",
-                style: TextStyle(color: Colors.white54),
-              ),
-              trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-              onTap: () {},
-            ),
+          _buildSettingCard(
+            Icons.bookmark,
+            "Kaydedilen Sistemler",
+            "Favoriye aldığınız donanımlar",
           ),
-
-          // MOBİL CİHAZ KARTI
-          Card(
-            color: Colors.white.withOpacity(0.05),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.laptop_mac, color: Colors.white),
-              title: const Text(
-                "Taşınabilir Cihazlar",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: const Text(
-                "HP Victus 16 • iPhone 16 Pro",
-                style: TextStyle(color: Colors.white54),
-              ),
-              trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-              onTap: () {},
-            ),
+          _buildSettingCard(
+            Icons.history,
+            "Arama Geçmişi",
+            "Son incelediğiniz parçalar",
           ),
 
           const SizedBox(height: 30),
           const Text(
-            "AYARLAR",
+            "UYGULAMA AYARLARI",
             style: TextStyle(
               color: Colors.white54,
               fontSize: 12,
@@ -283,28 +398,73 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          ListTile(
-            leading: const Icon(Icons.dark_mode, color: Colors.white),
-            title: const Text(
-              "Tema Görünümü",
-              style: TextStyle(color: Colors.white),
+          Card(
+            color: Colors.white.withOpacity(0.05),
+            margin: const EdgeInsets.only(bottom: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-            trailing: Switch(
-              value: true,
-              onChanged: (val) {},
-              activeColor: Colors.blueAccent,
+            child: ListTile(
+              leading: const Icon(Icons.dark_mode, color: Colors.white),
+              title: const Text(
+                "Karanlık Tema",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              trailing: Switch(
+                value: true,
+                onChanged: (val) {},
+                activeColor: Colors.blueAccent,
+              ),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.bookmark, color: Colors.white),
-            title: const Text(
-              "Favori Parçalarım",
-              style: TextStyle(color: Colors.white),
+          _buildSettingCard(
+            Icons.cloud_download,
+            "Veritabanını Güncelle",
+            "En yeni ekran kartı verilerini çek",
+          ),
+          _buildSettingCard(Icons.language, "Dil Seçenekleri", "Türkçe"),
+
+          const SizedBox(height: 30),
+          const Text(
+            "HAKKINDA",
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
             ),
-            trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-            onTap: () {},
+          ),
+          const SizedBox(height: 10),
+          _buildSettingCard(
+            Icons.info_outline,
+            "Uygulama Sürümü",
+            "v1.0.0 (Beta)",
           ),
         ],
+      ),
+    );
+  }
+
+  // Ayar kartlarını daha temiz oluşturmak için yardımcı fonksiyon
+  Widget _buildSettingCard(IconData icon, String title, String subtitle) {
+    return Card(
+      color: Colors.white.withOpacity(0.05),
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.white),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(subtitle, style: const TextStyle(color: Colors.white54)),
+        trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+        onTap: () {},
       ),
     );
   }

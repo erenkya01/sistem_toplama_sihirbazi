@@ -22,3 +22,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/gpu.json
+    - assets/cpu.txt
+    - assets/intel_cpu_database.json
