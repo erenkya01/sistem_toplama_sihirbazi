@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+// Yeni menü sayfamızın dosya yolunu import ediyoruz
+import 'screens/main_menu.dart';
 
 void main() {
   runApp(const SystemBuilderApp());
@@ -19,7 +20,8 @@ class SystemBuilderApp extends StatelessWidget {
         primaryColor: Colors.blueAccent,
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      // BURASI DEĞİŞTİ: Uygulamanın ana kapısı artık alt menülü sayfamız
+      home: const MainMenuScreen(),
     );
   }
 }
